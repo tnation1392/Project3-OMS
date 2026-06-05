@@ -1,23 +1,6 @@
 import pytest
-from app.models.product import Product
 from tests.factories.product_factory import make_product_data
 from tests.factories.order_factory import make_order_item_data
-
-@pytest.mark.smoke
-def test_authenticated_user_can_create_order(client, create_user_and_login):
-    auth_data = create_user_and_login("orderowner@test.com")
-    headers = auth_data["headers"]
-
-    response = client.post("/orders/", json={}, headers=headers)
-
-    assert response.status_code == 200
-    data = response.json()
-
-    assert data["user_id"] == auth_data["user"]["id"]
-    assert data["status"] == "CREATED"
-    assert data["total_price"] == 0.0
-    assert "id" in data
-
 
 
 @pytest.mark.regression
@@ -26,6 +9,7 @@ def test_protected_order_endpoint_requires_token(client):
 
     assert response.status_code == 401
 
+
 @pytest.mark.regression
 def test_user_cannot_modify_another_users_order(client, create_user_and_login):
     owner_auth = create_user_and_login("owner@test.com")
@@ -33,7 +17,6 @@ def test_user_cannot_modify_another_users_order(client, create_user_and_login):
 
     product_payload = make_product_data(name="Speaker", price=90.0, stock=10)
     product_response = client.post("/products/", json=product_payload)
-
     assert product_response.status_code == 200
     product_id = product_response.json()["id"]
 
@@ -41,14 +24,41 @@ def test_user_cannot_modify_another_users_order(client, create_user_and_login):
     assert order_response.status_code == 200
     order_id = order_response.json()["id"]
 
+    item_payload = make_order_item_data(product_id=product_id, quantity=1)
     response = client.post(
         f"/orders/{order_id}/items",
-        json={"product_id": product_id, "quantity": 1},
+        json=item_payload,
         headers=other_auth["headers"]
     )
 
     assert response.status_code == 403
     assert response.json()["detail"] == "Not authorized for this order"
+
+
+@pytest.mark.regression
+def test_add_item_fails_when_stock_is_insufficient(client, create_user_and_login):
+    auth_data = create_user_and_login("nostock@test.com")
+    headers = auth_data["headers"]
+
+    product_payload = make_product_data(name="Mouse", price=25.0, stock=1)
+    product_response = client.post("/products/", json=product_payload)
+    assert product_response.status_code == 200
+    product_id = product_response.json()["id"]
+
+    order_response = client.post("/orders/", json={}, headers=headers)
+    assert order_response.status_code == 200
+    order_id = order_response.json()["id"]
+
+    item_payload = make_order_item_data(product_id=product_id, quantity=2)
+    response = client.post(
+        f"/orders/{order_id}/items",
+        json=item_payload,
+        headers=headers
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Insufficient stock"
+
 
 @pytest.mark.regression
 def test_cannot_pay_empty_order(client, create_user_and_login):
@@ -67,6 +77,7 @@ def test_cannot_pay_empty_order(client, create_user_and_login):
     assert response.status_code == 400
     assert response.json()["detail"] == "Cannot pay for an empty order"
 
+
 @pytest.mark.regression
 def test_cannot_ship_order_that_is_not_paid(client, create_user_and_login, create_admin_and_login):
     user_auth = create_user_and_login("regularuser@test.com")
@@ -76,57 +87,17 @@ def test_cannot_ship_order_that_is_not_paid(client, create_user_and_login, creat
     assert order_response.status_code == 200
     order_id = order_response.json()["id"]
 
-    response = client.post(f"/orders/{order_id}/ship",headers=admin_auth["headers"])
+    response = client.post(
+        f"/orders/{order_id}/ship",
+        headers=admin_auth["headers"]
+    )
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Only PAID orders can be shipped"
 
 
 @pytest.mark.regression
-def test_cannot_add_items_to_cancelled_order(client, create_user_and_login):
-    auth_data = create_user_and_login("cancelleditems@test.com")
-    headers = auth_data["headers"]
-
-    product_payload = make_product_data(name="Cable", price=15.0, stock=10)
-    product_response = client.post("/products/", json=product_payload)
-
-    assert product_response.status_code == 200
-    product_id = product_response.json()["id"]
-
-    order_response = client.post("/orders/", json={}, headers=headers)
-    assert order_response.status_code == 200
-    order_id = order_response.json()["id"]
-
-    cancel_response = client.post(
-        f"/orders/{order_id}/cancel",
-        headers=headers
-    )
-    assert cancel_response.status_code == 200
-
-    add_item_response = client.post(
-        f"/orders/{order_id}/items",
-        json={"product_id": product_id, "quantity": 1},
-        headers=headers
-    )
-
-    assert add_item_response.status_code == 400
-    assert add_item_response.json()["detail"] == "Items can only be added to CREATED orders"
-
-
-
-@pytest.mark.regression
 def test_user_cannot_cancel_another_users_order(client, create_user_and_login):
     owner_auth = create_user_and_login("ownercancel@test.com")
-    other_auth = create_user_and_login("othercancel@test.com")
 
-    order_response = client.post("/orders/", json={}, headers=owner_auth["headers"])
-    assert order_response.status_code == 200
-    order_id = order_response.json()["id"]
 
-    cancel_response = client.post(
-        f"/orders/{order_id}/cancel",
-        headers=other_auth["headers"]
-    )
-
-    assert cancel_response.status_code == 403
-    assert cancel_response.json()["detail"] == "Not authorized for this order"

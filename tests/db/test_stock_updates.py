@@ -1,16 +1,17 @@
 import pytest
+from tests.factories.product_factory import make_product_data
 from app.models.product import Product
+from tests.factories.order_factory import make_order_item_data
 
-@pytest.mark.regression
+
 @pytest.mark.db
+@pytest.mark.regression
 def test_cancelling_order_restores_stock(client, db, create_user_and_login):
     auth_data = create_user_and_login("restock@test.com")
     headers = auth_data["headers"]
 
-    product_response = client.post(
-        "/products/",
-        json={"name": "Monitor", "price": 200.0, "stock": 5}
-    )
+    product_payload = make_product_data(name="Monitor", price=200.0, stock=5)
+    product_response = client.post("/products/", json=product_payload)
     assert product_response.status_code == 200
     product_id = product_response.json()["id"]
 
@@ -18,9 +19,10 @@ def test_cancelling_order_restores_stock(client, db, create_user_and_login):
     assert order_response.status_code == 200
     order_id = order_response.json()["id"]
 
+    item_payload = make_order_item_data(product_id=product_id, quantity=2)
     add_item_response = client.post(
         f"/orders/{order_id}/items",
-        json={"product_id": product_id, "quantity": 2},
+        json=item_payload,
         headers=headers
     )
     assert add_item_response.status_code == 200
@@ -37,29 +39,3 @@ def test_cancelling_order_restores_stock(client, db, create_user_and_login):
 
     product_after_cancel = db.query(Product).filter(Product.id == product_id).first()
     assert product_after_cancel.stock == 5
-
-@pytest.mark.regression
-@pytest.mark.db
-def test_add_item_fails_when_stock_is_insufficient(client, create_user_and_login):
-    auth_data = create_user_and_login("nostock@test.com")
-    headers = auth_data["headers"]
-
-    product_response = client.post(
-        "/products/",
-        json={"name": "Mouse", "price": 25.0, "stock": 1}
-    )
-    assert product_response.status_code == 200
-    product_id = product_response.json()["id"]
-
-    order_response = client.post("/orders/", json={}, headers=headers)
-    assert order_response.status_code == 200
-    order_id = order_response.json()["id"]
-
-    response = client.post(
-        f"/orders/{order_id}/items",
-        json={"product_id": product_id, "quantity": 2},
-        headers=headers
-    )
-
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Insufficient stock"
