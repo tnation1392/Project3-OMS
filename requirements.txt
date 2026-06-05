@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+alembic
+pydantic
+httpx
+pytest
+pytest-asyncio
+passlib[bcrypt]
+bcrypt==4.3.0
+python-jose[cryptography]
+faker
+coverage
