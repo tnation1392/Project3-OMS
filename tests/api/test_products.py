@@ -1,6 +1,7 @@
 import pytest
 from tests.factories.product_factory import make_product_data
 
+
 @pytest.mark.smoke
 def test_create_product(client):
     payload = make_product_data(name="Laptop", price=1200.99, stock=10)
@@ -14,6 +15,7 @@ def test_create_product(client):
     assert data["price"] == payload["price"]
     assert data["stock"] == payload["stock"]
     assert "id" in data
+
 
 @pytest.mark.regression
 @pytest.mark.parametrize(
@@ -29,13 +31,10 @@ def test_create_product_invalid_input(client, payload):
 
     assert response.status_code == 422
 
+
 @pytest.mark.regression
 def test_create_product_duplicate_name(client):
-    payload = {
-        "name": "Monitor",
-        "price": 250.00,
-        "stock": 8
-    }
+    payload = make_product_data(name="Monitor", price=250.00, stock=8)
 
     first_response = client.post("/products/", json=payload)
     second_response = client.post("/products/", json=payload)

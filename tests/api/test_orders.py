@@ -1,5 +1,7 @@
 import pytest
 from app.models.product import Product
+from tests.factories.product_factory import make_product_data
+from tests.factories.order_factory import make_order_item_data
 
 @pytest.mark.smoke
 def test_authenticated_user_can_create_order(client, create_user_and_login):
@@ -29,10 +31,9 @@ def test_user_cannot_modify_another_users_order(client, create_user_and_login):
     owner_auth = create_user_and_login("owner@test.com")
     other_auth = create_user_and_login("other@test.com")
 
-    product_response = client.post(
-        "/products/",
-        json={"name": "Speaker", "price": 90.0, "stock": 10}
-    )
+    product_payload = make_product_data(name="Speaker", price=90.0, stock=10)
+    product_response = client.post("/products/", json=product_payload)
+
     assert product_response.status_code == 200
     product_id = product_response.json()["id"]
 
@@ -86,10 +87,9 @@ def test_cannot_add_items_to_cancelled_order(client, create_user_and_login):
     auth_data = create_user_and_login("cancelleditems@test.com")
     headers = auth_data["headers"]
 
-    product_response = client.post(
-        "/products/",
-        json={"name": "Cable", "price": 15.0, "stock": 10}
-    )
+    product_payload = make_product_data(name="Cable", price=15.0, stock=10)
+    product_response = client.post("/products/", json=product_payload)
+
     assert product_response.status_code == 200
     product_id = product_response.json()["id"]
 

@@ -1,6 +1,7 @@
 import pytest
 
 
+
 @pytest.fixture
 def create_user_and_login(client):
     def _create_user_and_login(email: str, password: str = "123456"):

@@ -1,18 +1,15 @@
 import pytest
+from tests.factories.user_factory import make_user_data
 
 
 @pytest.mark.smoke
 def test_user_can_login_and_receive_token(client):
-    create_response = client.post(
-        "/users/",
-        json={"email": "login@test.com", "password": "123456"}
-    )
+    create_payload = make_user_data(email="login@test.com", password="123456")
+
+    create_response = client.post("/users/", json=create_payload)
     assert create_response.status_code == 200
 
-    login_response = client.post(
-        "/auth/login",
-        json={"email": "login@test.com", "password": "123456"}
-    )
+    login_response = client.post("/auth/login", json=create_payload)
 
     assert login_response.status_code == 200
     data = login_response.json()
