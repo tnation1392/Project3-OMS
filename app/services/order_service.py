@@ -99,3 +99,27 @@ def ship_order(db: Session, order: Order) -> Order:
     db.refresh(order)
 
     return order
+
+def cancel_order(db: Session, order: Order) -> Order:
+    if order.status == "CANCELLED":
+        raise HTTPException(
+            status_code=400,
+            detail="Order is already cancelled"
+        )
+
+    if order.status not in ["CREATED", "PAID"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Only CREATED or PAID orders can be cancelled"
+        )
+
+    for item in order.items:
+        product = db.query(Product).filter(Product.id == item.product_id).first()
+        if product:
+            product.stock += item.quantity
+
+    order.status = "CANCELLED"
+    db.commit()
+    db.refresh(order)
+
+    return order

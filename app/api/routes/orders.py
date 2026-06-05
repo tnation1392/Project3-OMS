@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -9,6 +10,7 @@ from app.schemas.order import (
     OrderItemCreate,
     OrderItemResponse,
 )
+
 from app.services.order_service import (
     create_order_for_user,
     get_order_for_user,
@@ -16,6 +18,7 @@ from app.services.order_service import (
     add_item_to_order,
     pay_order,
     ship_order,
+    cancel_order,
 )
 
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -24,7 +27,7 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 @router.post("/", response_model=OrderResponse)
 def create_order(
     _: OrderCreate,
-    db: Session = Depends(get_db),
+    db: Session = Depends (get_db),
     current_user: User = Depends(get_current_user)
 ):
     return create_order_for_user(db, current_user.id)
@@ -59,3 +62,14 @@ def ship_existing_order(
 ):
     order = get_order_by_id(db, order_id)
     return ship_order(db, order)
+
+@router.post("/{order_id}/cancel", response_model=OrderResponse)
+def cancel_existing_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    order = get_order_for_user(db, order_id, current_user.id)
+    return cancel_order(db, order)
+
+
