@@ -30,3 +30,12 @@ def cancel_order_for_user(client, headers, order_id):
     )
     assert response.status_code == 200
     return response.json()
+
+
+def ship_order_as_admin(client, headers, order_id):
+    response = client.post(
+        f"/orders/{order_id}/ship",
+        headers=headers
+    )
+    assert response.status_code == 200
+    return response.json()
