@@ -18,7 +18,9 @@ def assert_order_shipped(order_data):
     assert order_data["status"] == "SHIPPED"
 
 
-def assert_order_item(item_data, expected_order_id, expected_product_id, expected_quantity, expected_price):
+def assert_order_item(
+    item_data, expected_order_id, expected_product_id, expected_quantity, expected_price
+):
     assert item_data["order_id"] == expected_order_id
     assert item_data["product_id"] == expected_product_id
     assert item_data["quantity"] == expected_quantity

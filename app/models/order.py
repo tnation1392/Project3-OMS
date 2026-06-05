@@ -13,4 +13,6 @@ class Order(Base):
     total_price = Column(Float, default=0.0, nullable=False)
 
     user = relationship("User", back_populates="orders")
-    items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+    items = relationship(
+        "OrderItem", back_populates="order", cascade="all, delete-orphan"
+    )

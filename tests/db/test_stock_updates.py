@@ -23,13 +23,7 @@ def test_cancelling_order_restores_stock(client, db, create_user_and_login):
 
     order = create_order_for_authenticated_user(client, headers)
 
-    add_item_to_order_for_user(
-        client,
-        headers,
-        order["id"],
-        product_id,
-        quantity=2
-    )
+    add_item_to_order_for_user(client, headers, order["id"], product_id, quantity=2)
 
     product_before_cancel = db.query(Product).filter(Product.id == product_id).first()
     assert product_before_cancel.stock == 3

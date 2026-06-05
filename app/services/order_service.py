@@ -42,11 +42,15 @@ def recalculate_order_total(order: Order) -> float:
     return sum(item.quantity * item.price_at_purchase for item in order.items)
 
 
-def add_item_to_order(db: Session, order_id: int, product_id: int, quantity: int) -> OrderItem:
+def add_item_to_order(
+    db: Session, order_id: int, product_id: int, quantity: int
+) -> OrderItem:
     order = get_order_by_id(db, order_id)
 
     if order.status != "CREATED":
-        raise HTTPException(status_code=400, detail="Items can only be added to CREATED orders")
+        raise HTTPException(
+            status_code=400, detail="Items can only be added to CREATED orders"
+        )
 
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
@@ -59,7 +63,7 @@ def add_item_to_order(db: Session, order_id: int, product_id: int, quantity: int
         order_id=order.id,
         product_id=product.id,
         quantity=quantity,
-        price_at_purchase=product.price
+        price_at_purchase=product.price,
     )
 
     db.add(order_item)
@@ -100,17 +104,14 @@ def ship_order(db: Session, order: Order) -> Order:
 
     return order
 
+
 def cancel_order(db: Session, order: Order) -> Order:
     if order.status == "CANCELLED":
-        raise HTTPException(
-            status_code=400,
-            detail="Order is already cancelled"
-        )
+        raise HTTPException(status_code=400, detail="Order is already cancelled")
 
     if order.status not in ["CREATED", "PAID"]:
         raise HTTPException(
-            status_code=400,
-            detail="Only CREATED or PAID orders can be cancelled"
+            status_code=400, detail="Only CREATED or PAID orders can be cancelled"
         )
 
     for item in order.items:

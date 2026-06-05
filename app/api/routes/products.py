@@ -14,11 +14,7 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=400, detail="Product already exists")
 
-    new_product = Product(
-        name=product.name,
-        price=product.price,
-        stock=product.stock
-    )
+    new_product = Product(name=product.name, price=product.price, stock=product.stock)
 
     db.add(new_product)
     db.commit()

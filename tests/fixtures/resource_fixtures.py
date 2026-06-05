@@ -9,4 +9,5 @@ def create_product(client):
         response = client.post("/products/", json=payload)
         assert response.status_code == 200
         return response.json()
+
     return _create_product

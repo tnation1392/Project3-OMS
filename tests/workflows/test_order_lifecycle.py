@@ -38,16 +38,11 @@ def test_user_can_create_order_add_item_and_pay(client, create_user_and_login):
 
     item_payload = make_order_item_data(product_id=product_id, quantity=2)
     add_item_response = client.post(
-        f"/orders/{order_id}/items",
-        json=item_payload,
-        headers=headers
+        f"/orders/{order_id}/items", json=item_payload, headers=headers
     )
     assert add_item_response.status_code == 200
 
-    pay_response = client.post(
-        f"/orders/{order_id}/pay",
-        headers=headers
-    )
+    pay_response = client.post(f"/orders/{order_id}/pay", headers=headers)
     assert pay_response.status_code == 200
 
     paid_order = pay_response.json()
@@ -57,7 +52,9 @@ def test_user_can_create_order_add_item_and_pay(client, create_user_and_login):
 
 @pytest.mark.workflow
 @pytest.mark.regression
-def test_admin_can_ship_paid_order(client, create_user_and_login, create_admin_and_login):
+def test_admin_can_ship_paid_order(
+    client, create_user_and_login, create_admin_and_login
+):
     user_auth = create_user_and_login("paiduser@test.com")
     admin_auth = create_admin_and_login("adminship@test.com")
 
@@ -72,22 +69,16 @@ def test_admin_can_ship_paid_order(client, create_user_and_login, create_admin_a
 
     item_payload = make_order_item_data(product_id=product_id, quantity=1)
     add_item_response = client.post(
-        f"/orders/{order_id}/items",
-        json=item_payload,
-        headers=user_auth["headers"]
+        f"/orders/{order_id}/items", json=item_payload, headers=user_auth["headers"]
     )
     assert add_item_response.status_code == 200
 
-    pay_response = client.post(
-        f"/orders/{order_id}/pay",
-        headers=user_auth["headers"]
-    )
+    pay_response = client.post(f"/orders/{order_id}/pay", headers=user_auth["headers"])
     assert pay_response.status_code == 200
     assert pay_response.json()["status"] == "PAID"
 
     ship_response = client.post(
-        f"/orders/{order_id}/ship",
-        headers=admin_auth["headers"]
+        f"/orders/{order_id}/ship", headers=admin_auth["headers"]
     )
 
     assert ship_response.status_code == 200

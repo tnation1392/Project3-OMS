@@ -26,9 +26,7 @@ def test_user_cannot_modify_another_users_order(client, create_user_and_login):
 
     item_payload = make_order_item_data(product_id=product_id, quantity=1)
     response = client.post(
-        f"/orders/{order_id}/items",
-        json=item_payload,
-        headers=other_auth["headers"]
+        f"/orders/{order_id}/items", json=item_payload, headers=other_auth["headers"]
     )
 
     assert response.status_code == 403
@@ -51,9 +49,7 @@ def test_add_item_fails_when_stock_is_insufficient(client, create_user_and_login
 
     item_payload = make_order_item_data(product_id=product_id, quantity=2)
     response = client.post(
-        f"/orders/{order_id}/items",
-        json=item_payload,
-        headers=headers
+        f"/orders/{order_id}/items", json=item_payload, headers=headers
     )
 
     assert response.status_code == 400
@@ -69,17 +65,16 @@ def test_cannot_pay_empty_order(client, create_user_and_login):
     assert order_response.status_code == 200
     order_id = order_response.json()["id"]
 
-    response = client.post(
-        f"/orders/{order_id}/pay",
-        headers=headers
-    )
+    response = client.post(f"/orders/{order_id}/pay", headers=headers)
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Cannot pay for an empty order"
 
 
 @pytest.mark.regression
-def test_cannot_ship_order_that_is_not_paid(client, create_user_and_login, create_admin_and_login):
+def test_cannot_ship_order_that_is_not_paid(
+    client, create_user_and_login, create_admin_and_login
+):
     user_auth = create_user_and_login("regularuser@test.com")
     admin_auth = create_admin_and_login("admin@test.com")
 
@@ -87,10 +82,7 @@ def test_cannot_ship_order_that_is_not_paid(client, create_user_and_login, creat
     assert order_response.status_code == 200
     order_id = order_response.json()["id"]
 
-    response = client.post(
-        f"/orders/{order_id}/ship",
-        headers=admin_auth["headers"]
-    )
+    response = client.post(f"/orders/{order_id}/ship", headers=admin_auth["headers"])
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Only PAID orders can be shipped"
@@ -99,5 +91,3 @@ def test_cannot_ship_order_that_is_not_paid(client, create_user_and_login, creat
 @pytest.mark.regression
 def test_user_cannot_cancel_another_users_order(client, create_user_and_login):
     owner_auth = create_user_and_login("ownercancel@test.com")
-
-

@@ -24,7 +24,7 @@ def test_create_product(client):
         {"name": "", "price": 10.0, "stock": 5},
         {"name": "Phone", "price": -1.0, "stock": 5},
         {"name": "Tablet", "price": 99.99, "stock": -3},
-    ]
+    ],
 )
 def test_create_product_invalid_input(client, payload):
     response = client.post("/products/", json=payload)

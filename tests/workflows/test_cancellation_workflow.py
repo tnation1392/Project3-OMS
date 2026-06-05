@@ -28,7 +28,9 @@ def test_user_can_cancel_created_order(client, create_user_and_login):
 
 @pytest.mark.workflow
 @pytest.mark.regression
-def test_cannot_cancel_shipped_order(client, create_user_and_login, create_admin_and_login):
+def test_cannot_cancel_shipped_order(
+    client, create_user_and_login, create_admin_and_login
+):
     user_auth = create_user_and_login("shippedcancel@test.com")
     admin_auth = create_admin_and_login("admincancel@test.com")
 
@@ -40,11 +42,7 @@ def test_cannot_cancel_shipped_order(client, create_user_and_login, create_admin
     order = create_order_for_authenticated_user(client, user_auth["headers"])
 
     add_item_to_order_for_user(
-        client,
-        user_auth["headers"],
-        order["id"],
-        product_id,
-        quantity=1
+        client, user_auth["headers"], order["id"], product_id, quantity=1
     )
 
     pay_order_for_user(client, user_auth["headers"], order["id"])
@@ -53,9 +51,11 @@ def test_cannot_cancel_shipped_order(client, create_user_and_login, create_admin
     assert_order_shipped(shipped_order)
 
     cancel_response = client.post(
-        f"/orders/{order['id']}/cancel",
-        headers=user_auth["headers"]
+        f"/orders/{order['id']}/cancel", headers=user_auth["headers"]
     )
 
     assert cancel_response.status_code == 400
-    assert cancel_response.json()["detail"] == "Only CREATED or PAID orders can be cancelled"
+    assert (
+        cancel_response.json()["detail"]
+        == "Only CREATED or PAID orders can be cancelled"
+    )
