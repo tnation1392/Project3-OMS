@@ -236,3 +236,46 @@ def test_delivered_order_can_still_be_retrieved(
     detail = detail_response.json()
     assert detail["status"] == "DELIVERED"
     assert detail["id"] == order_id
+
+
+@pytest.mark.regression
+def test_order_detail_shows_single_line_item_after_duplicate_adds(
+    client, create_user_and_login
+):
+    auth_data = create_user_and_login("detailmerge@test.com")
+    headers = auth_data["headers"]
+
+    product_payload = make_product_data(name="Webcam", price=80.0, stock=10)
+    product_response = client.post("/products/", json=product_payload)
+    assert product_response.status_code == 200
+    product_id = product_response.json()["id"]
+
+    order_response = client.post("/orders/", json={}, headers=headers)
+    assert order_response.status_code == 200
+    order_id = order_response.json()["id"]
+
+    first_item_payload = make_order_item_data(product_id=product_id, quantity=1)
+    second_item_payload = make_order_item_data(product_id=product_id, quantity=2)
+
+    first_add_response = client.post(
+        f"/orders/{order_id}/items",
+        json=first_item_payload,
+        headers=headers,
+    )
+    assert first_add_response.status_code == 200
+
+    second_add_response = client.post(
+        f"/orders/{order_id}/items",
+        json=second_item_payload,
+        headers=headers,
+    )
+    assert second_add_response.status_code == 200
+
+    detail_response = client.get(f"/orders/{order_id}", headers=headers)
+    assert detail_response.status_code == 200
+
+    detail = detail_response.json()
+    assert len(detail["items"]) == 1
+    assert detail["items"][0]["product_id"] == product_id
+    assert detail["items"][0]["quantity"] == 3
+    assert detail["total_price"] == 240.0

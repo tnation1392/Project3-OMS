@@ -268,3 +268,48 @@ def test_cannot_pay_delivered_order(
 
     assert pay_again_response.status_code == 400
     assert pay_again_response.json()["detail"] == "Only CREATED orders can be paid"
+
+
+@pytest.mark.workflow
+@pytest.mark.regression
+def test_adding_same_product_twice_merges_quantity_and_updates_total(
+    client, create_user_and_login
+):
+    auth_data = create_user_and_login("mergeitems@test.com")
+    headers = auth_data["headers"]
+
+    product_payload = make_product_data(name="Keyboard", price=50.0, stock=10)
+    product_response = client.post("/products/", json=product_payload)
+    assert product_response.status_code == 200
+    product_id = product_response.json()["id"]
+
+    order = create_order_for_authenticated_user(client, headers)
+
+    first_add = add_item_to_order_for_user(
+        client,
+        headers,
+        order["id"],
+        product_id,
+        quantity=2,
+    )
+
+    second_add = add_item_to_order_for_user(
+        client,
+        headers,
+        order["id"],
+        product_id,
+        quantity=1,
+    )
+
+    assert first_add["product_id"] == product_id
+    assert second_add["product_id"] == product_id
+    assert second_add["quantity"] == 3
+    assert second_add["price_at_purchase"] == 50.0
+
+    order_detail_response = client.get(f"/orders/{order['id']}", headers=headers)
+    assert order_detail_response.status_code == 200
+    order_detail = order_detail_response.json()
+
+    assert order_detail["total_price"] == 150.0
+    assert len(order_detail["items"]) == 1
+    assert order_detail["items"][0]["quantity"] == 3

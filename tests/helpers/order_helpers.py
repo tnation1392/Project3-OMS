@@ -30,3 +30,9 @@ def ship_order_as_admin(client, headers, order_id):
     response = client.post(f"/orders/{order_id}/ship", headers=headers)
     assert response.status_code == 200
     return response.json()
+
+
+def get_order_detail_for_user(client, headers, order_id):
+    response = client.get(f"/orders/{order_id}", headers=headers)
+    assert response.status_code == 200
+    return response.json()

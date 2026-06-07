@@ -45,7 +45,9 @@ def recalculate_order_total(order: Order) -> float:
 def add_item_to_order(
     db: Session, order_id: int, product_id: int, quantity: int
 ) -> OrderItem:
-    order = get_order_by_id(db, order_id)
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
 
     if order.status != "CREATED":
         raise HTTPException(
@@ -59,14 +61,24 @@ def add_item_to_order(
     if quantity > product.stock:
         raise HTTPException(status_code=400, detail="Insufficient stock")
 
-    order_item = OrderItem(
-        order_id=order.id,
-        product_id=product.id,
-        quantity=quantity,
-        price_at_purchase=product.price,
+    existing_item = (
+        db.query(OrderItem)
+        .filter(OrderItem.order_id == order.id, OrderItem.product_id == product.id)
+        .first()
     )
 
-    db.add(order_item)
+    if existing_item:
+        existing_item.quantity += quantity
+        order_item = existing_item
+    else:
+        order_item = OrderItem(
+            order_id=order.id,
+            product_id=product.id,
+            quantity=quantity,
+            price_at_purchase=product.price,
+        )
+        db.add(order_item)
+
     product.stock -= quantity
 
     db.flush()
@@ -141,7 +153,7 @@ def cancel_order(db: Session, order: Order) -> Order:
     return order
 
 
-def deliver_order(db: Session, order: Order) -> Order:
+def deliver_order(db, order):
     if order.status != "SHIPPED":
         raise HTTPException(
             status_code=400, detail="Only SHIPPED orders can be delivered"
