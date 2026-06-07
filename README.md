@@ -201,6 +201,34 @@ python -m pytest -v --cov=app --cov-config=.coveragerc --cov-report=term-missing
 
 ---
 
+## Quick Demo Flow
+
+A simple way to demo the system:
+
+1. Create a user
+2. Log in and get a JWT token
+3. Create a product
+4. Create an order
+5. Add items to the order
+6. Pay the order
+7. Ship the order as admin
+8. Deliver the order as admin
+9. Retrieve order history and detail
+
+---
+
+## Key Testing Scenarios
+
+- Protected routes require valid JWT authentication
+- Users cannot modify another user’s order
+- Stock decreases when items are added
+- Stock restores on eligible cancellation
+- Delivered orders are terminal
+- Duplicate line-item additions merge quantity
+- Notification side effects can be mocked without affecting shipping state
+
+---
+
 ## Key QA Automation Skills Demonstrated
 
 This project demonstrates:
