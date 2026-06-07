@@ -15,11 +15,12 @@ from app.services.order_service import (
     create_order_for_user,
     get_order_for_user,
     get_order_by_id,
+    list_orders_for_user,
     add_item_to_order,
     pay_order,
     ship_order,
+    deliver_order,
     cancel_order,
-    list_orders_for_user,
 )
 
 router = APIRouter(prefix="/orders", tags=["orders"])
