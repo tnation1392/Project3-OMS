@@ -186,8 +186,11 @@ def test_user_can_filter_orders_by_status(client, create_user_and_login):
     assert len(filtered_orders) == 1
     assert filtered_orders[0]["status"] == "PAID"
 
+
 @pytest.mark.regression
-def test_delivered_order_can_still_be_retrieved(client, create_user_and_login, create_admin_and_login):
+def test_delivered_order_can_still_be_retrieved(
+    client, create_user_and_login, create_admin_and_login
+):
     user_auth = create_user_and_login("delivereddetail@test.com")
     admin_auth = create_admin_and_login("delivereddetailadmin@test.com")
 

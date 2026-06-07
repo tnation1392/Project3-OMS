@@ -2,8 +2,12 @@ import pytest
 
 from tests.factories.product_factory import make_product_data
 from tests.factories.order_factory import make_order_item_data
-from tests.helpers.order_helpers import pay_order_for_user, create_order_for_authenticated_user, \
-    add_item_to_order_for_user, ship_order_as_admin
+from tests.helpers.order_helpers import (
+    pay_order_for_user,
+    create_order_for_authenticated_user,
+    add_item_to_order_for_user,
+    ship_order_as_admin,
+)
 
 
 @pytest.mark.workflow
@@ -86,9 +90,12 @@ def test_admin_can_ship_paid_order(
     assert ship_response.status_code == 200
     assert ship_response.json()["status"] == "SHIPPED"
 
+
 @pytest.mark.workflow
 @pytest.mark.regression
-def test_cannot_deliver_order_twice(client, create_user_and_login, create_admin_and_login):
+def test_cannot_deliver_order_twice(
+    client, create_user_and_login, create_admin_and_login
+):
     user_auth = create_user_and_login("deliveronce@test.com")
     admin_auth = create_admin_and_login("deliveradmin@test.com")
 
@@ -123,11 +130,17 @@ def test_cannot_deliver_order_twice(client, create_user_and_login, create_admin_
     )
 
     assert second_deliver_response.status_code == 400
-    assert second_deliver_response.json()["detail"] == "Only SHIPPED orders can be delivered"
+    assert (
+        second_deliver_response.json()["detail"]
+        == "Only SHIPPED orders can be delivered"
+    )
+
 
 @pytest.mark.workflow
 @pytest.mark.regression
-def test_cannot_cancel_delivered_order(client, create_user_and_login, create_admin_and_login):
+def test_cannot_cancel_delivered_order(
+    client, create_user_and_login, create_admin_and_login
+):
     user_auth = create_user_and_login("deliveredcancel@test.com")
     admin_auth = create_admin_and_login("deliveredcanceladmin@test.com")
 
@@ -162,11 +175,17 @@ def test_cannot_cancel_delivered_order(client, create_user_and_login, create_adm
     )
 
     assert cancel_response.status_code == 400
-    assert cancel_response.json()["detail"] == "Only CREATED or PAID orders can be cancelled"
+    assert (
+        cancel_response.json()["detail"]
+        == "Only CREATED or PAID orders can be cancelled"
+    )
+
 
 @pytest.mark.workflow
 @pytest.mark.regression
-def test_cannot_add_items_to_delivered_order(client, create_user_and_login, create_admin_and_login):
+def test_cannot_add_items_to_delivered_order(
+    client, create_user_and_login, create_admin_and_login
+):
     user_auth = create_user_and_login("delivereditems@test.com")
     admin_auth = create_admin_and_login("delivereditemsadmin@test.com")
 
@@ -203,11 +222,17 @@ def test_cannot_add_items_to_delivered_order(client, create_user_and_login, crea
     )
 
     assert add_after_delivery_response.status_code == 400
-    assert add_after_delivery_response.json()["detail"] == "Items can only be added to CREATED orders"
+    assert (
+        add_after_delivery_response.json()["detail"]
+        == "Items can only be added to CREATED orders"
+    )
+
 
 @pytest.mark.workflow
 @pytest.mark.regression
-def test_cannot_pay_delivered_order(client, create_user_and_login, create_admin_and_login):
+def test_cannot_pay_delivered_order(
+    client, create_user_and_login, create_admin_and_login
+):
     user_auth = create_user_and_login("deliveredpay@test.com")
     admin_auth = create_admin_and_login("deliveredpayadmin@test.com")
 
