@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_user, get_current_admin
@@ -8,7 +8,6 @@ from app.schemas.order import (
     OrderResponse,
     OrderItemCreate,
     OrderItemResponse,
-    OrderItemDetailResponse,
     OrderDetailResponse,
 )
 
@@ -98,3 +97,27 @@ def get_my_order_detail(
     current_user: User = Depends(get_current_user),
 ):
     return get_order_for_user(db, order_id, current_user.id)
+
+
+
+def deliver_order(db, order):
+    if order.status != "SHIPPED":
+        raise HTTPException(
+            status_code=400,
+            detail="Only SHIPPED orders can be delivered"
+        )
+
+    order.status = "DELIVERED"
+    db.commit()
+    db.refresh(order)
+
+    return order
+
+@router.post("/{order_id}/deliver", response_model=OrderResponse)
+def deliver_existing_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_admin)
+):
+    order = get_order_by_id(db, order_id)
+    return deliver_order(db, order)

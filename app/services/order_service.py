@@ -139,3 +139,13 @@ def cancel_order(db: Session, order: Order) -> Order:
     db.refresh(order)
 
     return order
+
+def deliver_order(db: Session, order: Order) -> Order:
+    if order.status != "SHIPPED":
+        raise HTTPException(status_code=400, detail="Only SHIPPED orders can be delivered")
+
+    order.status = "DELIVERED"
+    db.commit()
+    db.refresh(order)
+
+    return order
