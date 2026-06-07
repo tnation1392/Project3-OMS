@@ -80,6 +80,21 @@ def add_item_to_order(
     return order_item
 
 
+def list_orders_for_user(
+    db: Session,
+    user_id: int,
+    status: str | None = None,
+    limit: int = 20,
+    offset: int = 0,
+) -> list[Order]:
+    query = db.query(Order).filter(Order.user_id == user_id)
+
+    if status:
+        query = query.filter(Order.status == status)
+
+    return query.order_by(Order.id.desc()).offset(offset).limit(limit).all()
+
+
 def pay_order(db: Session, order: Order) -> Order:
     if order.status != "CREATED":
         raise HTTPException(status_code=400, detail="Only CREATED orders can be paid")

@@ -6,6 +6,7 @@ from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse
 from app.core.security import hash_password
 from app.api.deps import get_db
+import pytest
 
 router = APIRouter(prefix="/users", tags=["users"])
 

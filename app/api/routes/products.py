@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.models.product import Product
 from app.schemas.product import ProductCreate, ProductResponse
+import pytest
 
 router = APIRouter(prefix="/products", tags=["products"])
 

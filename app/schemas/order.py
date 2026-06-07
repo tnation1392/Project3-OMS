@@ -29,3 +29,24 @@ class OrderItemResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class OrderItemDetailResponse(BaseModel):
+    id: int
+    product_id: int
+    quantity: int
+    price_at_purchase: float
+
+    class Config:
+        from_attributes = True
+
+
+class OrderDetailResponse(BaseModel):
+    id: int
+    user_id: int
+    status: str
+    total_price: float
+    items: list[OrderItemDetailResponse]
+
+    class Config:
+        from_attributes = True

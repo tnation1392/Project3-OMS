@@ -91,3 +91,97 @@ def test_cannot_ship_order_that_is_not_paid(
 @pytest.mark.regression
 def test_user_cannot_cancel_another_users_order(client, create_user_and_login):
     owner_auth = create_user_and_login("ownercancel@test.com")
+
+
+@pytest.mark.regression
+def test_user_can_list_only_their_own_orders(client, create_user_and_login):
+    user_one = create_user_and_login("orders1@test.com")
+    user_two = create_user_and_login("orders2@test.com")
+
+    response_one = client.post("/orders/", json={}, headers=user_one["headers"])
+    assert response_one.status_code == 200
+
+    response_two = client.post("/orders/", json={}, headers=user_two["headers"])
+    assert response_two.status_code == 200
+
+    my_orders_response = client.get("/orders/me", headers=user_one["headers"])
+    assert my_orders_response.status_code == 200
+
+    my_orders = my_orders_response.json()
+    assert len(my_orders) == 1
+    assert my_orders[0]["user_id"] == user_one["user"]["id"]
+
+
+@pytest.mark.regression
+def test_order_detail_includes_items(client, create_user_and_login):
+    auth_data = create_user_and_login("detailuser@test.com")
+    headers = auth_data["headers"]
+
+    product_payload = make_product_data(name="DeskLamp", price=35.0, stock=4)
+    product_response = client.post("/products/", json=product_payload)
+    assert product_response.status_code == 200
+    product_id = product_response.json()["id"]
+
+    order_response = client.post("/orders/", json={}, headers=headers)
+    assert order_response.status_code == 200
+    order_id = order_response.json()["id"]
+
+    item_payload = make_order_item_data(product_id=product_id, quantity=2)
+    add_item_response = client.post(
+        f"/orders/{order_id}/items",
+        json=item_payload,
+        headers=headers,
+    )
+    assert add_item_response.status_code == 200
+
+    detail_response = client.get(f"/orders/{order_id}", headers=headers)
+    assert detail_response.status_code == 200
+
+    detail = detail_response.json()
+    assert detail["id"] == order_id
+    assert detail["status"] == "CREATED"
+    assert detail["total_price"] == 70.0
+    assert len(detail["items"]) == 1
+    assert detail["items"][0]["product_id"] == product_id
+    assert detail["items"][0]["quantity"] == 2
+
+
+@pytest.mark.regression
+def test_user_can_filter_orders_by_status(client, create_user_and_login):
+    auth_data = create_user_and_login("filteruser@test.com")
+    headers = auth_data["headers"]
+
+    product_payload = make_product_data(name="MousePad", price=20.0, stock=5)
+    product_response = client.post("/products/", json=product_payload)
+    assert product_response.status_code == 200
+    product_id = product_response.json()["id"]
+
+    # Order 1 stays CREATED
+    created_order_response = client.post("/orders/", json={}, headers=headers)
+    assert created_order_response.status_code == 200
+
+    # Order 2 becomes PAID
+    paid_order_response = client.post("/orders/", json={}, headers=headers)
+    assert paid_order_response.status_code == 200
+    paid_order_id = paid_order_response.json()["id"]
+
+    item_payload = make_order_item_data(product_id=product_id, quantity=1)
+    add_item_response = client.post(
+        f"/orders/{paid_order_id}/items",
+        json=item_payload,
+        headers=headers,
+    )
+    assert add_item_response.status_code == 200
+
+    pay_response = client.post(
+        f"/orders/{paid_order_id}/pay",
+        headers=headers,
+    )
+    assert pay_response.status_code == 200
+
+    filtered_response = client.get("/orders/me?status=PAID", headers=headers)
+    assert filtered_response.status_code == 200
+
+    filtered_orders = filtered_response.json()
+    assert len(filtered_orders) == 1
+    assert filtered_orders[0]["status"] == "PAID"
