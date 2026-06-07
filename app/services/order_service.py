@@ -7,6 +7,7 @@ from app.models.product import Product
 from app.models.user import User
 from app.services.notification_service import send_shipping_notification
 
+
 def create_order_for_user(db: Session, user_id: int) -> Order:
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -132,8 +133,8 @@ def ship_order(db: Session, order: Order) -> Order:
     try:
         send_shipping_notification(order.id, order.user.email)
     except Exception:
-        #Shipping is the primary business action
-        #Notification failure shouldn't undo the shipped state
+        # Shipping is the primary business action
+        # Notification failure shouldn't undo the shipped state
         pass
 
     return order

@@ -9,7 +9,9 @@ from tests.helpers.order_helpers import (
 
 
 @pytest.mark.regression
-def test_shipping_calls_notification_service(client, create_user_and_login, create_admin_and_login):
+def test_shipping_calls_notification_service(
+    client, create_user_and_login, create_admin_and_login
+):
     user_auth = create_user_and_login("notifyuser@test.com")
     admin_auth = create_admin_and_login("notifyadmin@test.com")
 
@@ -43,7 +45,9 @@ def test_shipping_calls_notification_service(client, create_user_and_login, crea
 
 
 @pytest.mark.regression
-def test_shipping_still_succeeds_if_notification_service_fails(client, create_user_and_login, create_admin_and_login):
+def test_shipping_still_succeeds_if_notification_service_fails(
+    client, create_user_and_login, create_admin_and_login
+):
     user_auth = create_user_and_login("notifyfailuser@test.com")
     admin_auth = create_admin_and_login("notifyfailadmin@test.com")
 
