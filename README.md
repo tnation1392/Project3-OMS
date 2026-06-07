@@ -156,7 +156,7 @@ CI currently supports:
 
 ### 1. Clone the repository
 ```bash
-git clone <your-repo-url>
+git clone <https://github.com/tnation1392/project3-OMS>
 cd project-3-OMS
 ```
 
